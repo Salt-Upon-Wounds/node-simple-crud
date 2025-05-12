@@ -60,6 +60,7 @@ if (cluster.isPrimary) {
       (proxyRes) => {
         res.writeHead(proxyRes.statusCode || 500, proxyRes.headers)
         proxyRes.pipe(res, { end: true })
+        console.log(`Ответ от воркера PID: ${proxyRes.headers['x-worker-pid']}`)
       }
     )
 

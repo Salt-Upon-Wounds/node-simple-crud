@@ -4,3 +4,8 @@ export interface User {
   age: number
   hobbies: string[]
 }
+
+export interface Message {
+  data: string
+  type: string
+}
