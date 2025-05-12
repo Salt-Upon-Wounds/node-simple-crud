@@ -6,7 +6,8 @@
     "test": "jest --silent",
     "test:verbose": "jest",
     "start:dev": "tsx watch src/index.ts",
-    "start:prod": "tsc && node dist/index.js"
+    "start:prod": "tsc && node dist/index.js",
+    "start:multi": "tsx src/cluster.ts"
   },
   "type": "module",
   "repository": {
