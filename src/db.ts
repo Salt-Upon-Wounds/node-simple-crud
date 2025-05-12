@@ -1,4 +1,4 @@
-import { User } from './types'
+import { User } from './types.js'
 import { v4 as uuidv4 } from 'uuid'
 
 const ids = [uuidv4(), uuidv4(), uuidv4()]

@@ -1,12 +1,14 @@
-import { db, isUser } from './db'
+import { db, isUser } from './db.js'
 import { createServer, IncomingMessage, ServerResponse } from 'node:http'
 import { parse } from 'url'
 import { v4, validate } from 'uuid'
-import { User } from './types'
+import { User } from './types.js'
+import { config } from 'dotenv'
 
+config()
 const PORT = parseInt(process.env.PORT ?? '') || 4000
 
-const server = createServer((req: IncomingMessage, resp: ServerResponse) => {
+const server = createServer(async (req: IncomingMessage, resp: ServerResponse) => {
   const { pathname } = parse(req.url || '', true)
   const method = req.method || ''
   const id = pathname?.match(/^\/api\/users\/([a-f\d-]+)$/i)?.[1]
@@ -29,18 +31,27 @@ const server = createServer((req: IncomingMessage, resp: ServerResponse) => {
     }
   } else if (pathname === '/api/users' && method === 'POST') {
     let body = ''
-    req.on('data', (chunk) => (body += chunk))
-    req.on('end', () => {
-      const data = JSON.parse(body)
-      if (!isUser(data)) {
-        status = 400
-        message = 'Invalid user data'
-      } else {
-        status = 201
-        const newId = v4()
-        db.set(newId, { id: newId, username: data.username, age: data.age, hobbies: data.hobbies })
-        message = db.get(newId)!
-      }
+    await new Promise<void>((resolve, reject) => {
+      req.on('data', (chunk) => (body += chunk))
+      req.on('end', () => {
+        const data = JSON.parse(body)
+        if (!isUser(data)) {
+          status = 400
+          message = 'Invalid user data'
+        } else {
+          status = 201
+          const newId = v4()
+          db.set(newId, {
+            id: newId,
+            username: data.username,
+            age: data.age,
+            hobbies: data.hobbies,
+          })
+          message = db.get(newId)!
+        }
+        resolve()
+      })
+      req.on('error', reject)
     })
   } else if (id && method === 'PUT') {
     if (!validate(id)) {
@@ -51,17 +62,21 @@ const server = createServer((req: IncomingMessage, resp: ServerResponse) => {
       message = 'User not found'
     } else {
       let body = ''
-      req.on('data', (chunk) => (body += chunk))
-      req.on('end', () => {
-        const data = JSON.parse(body)
-        if (!isUser(data)) {
-          status = 400
-          message = 'Invalid user data'
-        } else {
-          status = 201
-          db.set(id, { id, username: data.username, age: data.age, hobbies: data.hobbies })
-          message = db.get(id)!
-        }
+      await new Promise<void>((resolve, reject) => {
+        req.on('data', (chunk) => (body += chunk))
+        req.on('end', () => {
+          const data = JSON.parse(body)
+          if (!isUser(data)) {
+            status = 400
+            message = 'Invalid user data'
+          } else {
+            status = 201
+            db.set(id, { id, username: data.username, age: data.age, hobbies: data.hobbies })
+            message = db.get(id)!
+          }
+          resolve()
+        })
+        req.on('error', reject)
       })
     }
   } else if (id && method === 'DELETE') {
@@ -82,4 +97,6 @@ const server = createServer((req: IncomingMessage, resp: ServerResponse) => {
   resp.end(message)
 })
 
-server.listen(PORT)
+server.listen(PORT, () => {
+  console.log(`Server listening on http://localhost:${PORT}`)
+})
