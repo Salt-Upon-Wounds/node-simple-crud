@@ -1,5 +1,5 @@
 import { config } from 'dotenv'
-import server from './server.js'
+import server from './server'
 
 config()
 const PORT = parseInt(process.env.PORT ?? '') || 4000

@@ -1,8 +1,8 @@
-import { db, isUser } from './db.js'
+import { db, isUser } from './db'
 import { createServer, IncomingMessage, ServerResponse } from 'node:http'
 import { parse } from 'url'
 import { v4, validate } from 'uuid'
-import { User } from './types.js'
+import { User } from './types'
 
 export default () =>
   createServer(async (req: IncomingMessage, resp: ServerResponse) => {
